@@ -38,10 +38,3 @@ En este punto, ya se puede iniciar sesión en PostgreSQL para conectarse a una b
   psql -l # Listar bases de datos
   psql -d postgres # Conectarse a la base de datos postgres
   ```
-Si lo desea, una vez dentro de PostgreSQL, se puede crear un nuevo usuario y darle permisos de SUPERUSUARIO:
-  ```
-  CREATE USER usuario WITH PASSWORD 'password'; # Crear usuario
-  ALTER USER usuario WITH SUPERUSER; # Dar permisos de superusuario al usuario
-  \q # Salir de PostgreSQL
-  ```
-
