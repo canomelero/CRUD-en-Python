@@ -36,8 +36,9 @@ class Pedidos:
         print("Creación de tablas e inserción de tuplas en Stock...")
 
         # getcwd() -> Devuelve un string que representa el directorio de trabajo actual
-        print("Indique el nombre archivo .sql desde la ruta actual (ponga /nombre_archivo.sql):")
-        path = os.getcwd() + input()
+        # print("Indique el nombre archivo .sql desde la ruta actual (ponga /nombre_archivo.sql):")
+        # path = os.getcwd() + input()
+        path = os.getcwd() + archivo
 
         try:  
             # Abrir el archivo proporcionado en formato sql, el cual contiene las tablas a crear
@@ -48,6 +49,8 @@ class Pedidos:
             print("Error en la lectura del archivo")
             self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
             raise e
+
+        print("Tablas creadas")
 
 
     def aniadir_pedido(self):
@@ -222,22 +225,22 @@ class Pedidos:
         #    raise e
         
 
-    def obtener_pedido(cursor) -> list:
+    def obtener_pedido(self) -> list:
         """Obtiene el contenido de la tabla Pedido."""
-        cursor.execute("SELECT * FROM pedido;")
-        return cursor.fetchall()
+        self.cursor.execute("SELECT * FROM pedido;")
+        return self.cursor.fetchall()
 
 
-    def obtener_stock(cursor) -> list:
+    def obtener_stock(self) -> list:
         """Obtiene el contenido de la tabla Stock."""
-        cursor.execute("SELECT * FROM stock;")
-        return cursor.fetchall()
+        self.cursor.execute("SELECT * FROM stock;")
+        return self.cursor.fetchall()
 
 
-    def obtener_detalle_pedido(cursor) -> list:
+    def obtener_detalle_pedido(self) -> list:
         """Obtiene el contenido de la tabla Detalle Pedido."""
-        cursor.execute("SELECT * FROM detalle_pedido;")
-        return cursor.fetchall()
+        self.cursor.execute("SELECT * FROM detalle_pedido;")
+        return self.cursor.fetchall()
     
     
     def cerrar_conex(self) -> None:
