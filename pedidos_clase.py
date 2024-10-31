@@ -4,12 +4,35 @@ import os
 # Adaptador para PostgreSQL en Python
 import psycopg2 as pg  
 
+database = str()
+user = str()
+password = str()
+
+def usuario(nombre:str):
+    global database, user, password
+
+    if nombre == "GERMÁN":
+        database = 'postgres'
+        user = 'gag_04'
+        password = ''
+    
+    elif nombre == "JORGE":
+        database = 'pedidos'
+        user = 'ddsiuser'
+        password = 'ddsi'
+        
+
 class Pedidos:
     def __init__(self):
+        usuario("GERMÁN")
+        #usuario("JORGE")
+
+        global database, user, password
+
         self.connection = pg.connect(
-            database = 'pedidos',
-            user = 'ddsiuser',
-            password = 'ddsi',
+            dbname=database,  
+            user=user,
+            password=password,
             host = 'localhost'
         )
 
@@ -53,7 +76,7 @@ class Pedidos:
         print("Tablas creadas")
 
 
-    def aniadir_pedido(self):
+    def aniadir_pedido(self, cpedido:str , ccliente: str, fecha_pedido: str):
         """Añade una nueva tupla a la tabla pedido
 
         Parameters
@@ -71,16 +94,19 @@ class Pedidos:
         """
         self.cursor.execute("SAVEPOINT s1;")
 
-        self.cpedido = input("Código del pedido: ")
-        self.ccliente = int(input("Código del cliente: "))
-        self.fecha_pedido = input("Fecha del pedido: ")  # De tipo DATE o VARCHAR
+        # self.cpedido = input("Código del pedido: ")
+        # self.ccliente = int(input("Código del cliente: "))
+        # self.fecha_pedido = input("Fecha del pedido: ")  # De tipo DATE o VARCHAR
 
         try:
             # Introducir los datos en la tabla pedido.
             self.cursor.execute(
                 "INSERT INTO pedido(cpedido, ccliente, fecha_pedido) VALUES (%s, %s, %s);",
-                (self.cpedido, self.ccliente, self.fecha_pedido)
+                (cpedido, ccliente, fecha_pedido)
             )
+
+            print(f"Pedido añadido correctamente: cpedido={cpedido}, ccliente={ccliente}, fecha_pedido={fecha_pedido}")
+
         except Exception as e:
             print("No se ha podido insertar el pedido")
             self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
