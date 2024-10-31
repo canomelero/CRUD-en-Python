@@ -23,6 +23,7 @@ frameTabla = tk.Frame(app)
 frameTablaStock = tk.Frame(app)
 frameTablaPedido = tk.Frame(app)
 frameTablaDetPed = tk.Frame(app)
+frameDatosPedido = tk.Frame(app, bg="darkblue")
 
 # Añadir la imagen de fondo de la pantalla principal
 label_fondo = tk.Label(pantallaInicial, image=imagen_fondo)
@@ -40,6 +41,7 @@ def mostrarPantalla(frame):
     frameTablaStock.pack_forget()
     frameTablaPedido.pack_forget()
     frameTablaDetPed.pack_forget()
+    frameDatosPedido.pack_forget()
 
     # pack() -> Método de la clase Frame que muestra un widget en la pantalla
     frame.pack(fill = 'both', expand = True) 
@@ -181,7 +183,7 @@ def cargarTabla(opcion):
     )
 
     btnConfirmar.pack(pady = 20)
-    
+
 
 def accionPrincipal3():
     mostrarPantalla(pantallaOpc3)
@@ -215,14 +217,14 @@ def accionPrincipal3():
 
     btnConfirmar.pack(pady = 20)
 
+
 def realizarAccion():
     seleccion = opcion.get()
 
     if seleccion == 1:
         accionPrincipal1()
     elif seleccion == 2:
-        pedidos.aniadir_pedido()
-        cargarSegundoMenu(segundoMenu)
+        accionDatosPedido()
     elif seleccion == 3:
         #cargarTablaStock()
         #cargarTablaPedio()
@@ -282,6 +284,7 @@ def cargarMenuPrincipal(frame):
     # Ubicación de botón en el centro de la pantalla
     btnConfirmar.pack(pady=30)
 
+
 def cargarSegundoMenu(frame):
 
     mostrarPantalla(frame)
@@ -319,6 +322,7 @@ def cargarSegundoMenu(frame):
     # Ubicación de botón en el centro de la pantalla
     btnConfirmar.pack(pady=60)
 
+
 def cargarPantallaInicio(app):
     app.geometry("800x600")  # geometry() -> establecer tamaño de la ventana
     app.title("Seminario 1 - DDSI")
@@ -341,6 +345,47 @@ def cargarPantallaInicio(app):
 
     # Ubicación de botón en el centro de la pantalla
     btnIniciar.place(x=400, y=450, anchor="center")
+
+
+def accionDatosPedido():
+    mostrarPantalla(frameDatosPedido)
+
+    mensaje1 = tk.Label(frameDatosPedido, text = "Código de pedido",
+                       bg = "lightgreen", font=("Arial", 16))
+    mensaje1.pack()
+
+    codigoPedido = tk.Entry(frameDatosPedido, width = 30)
+    codigoPedido.pack(pady = 20)
+
+    mensaje2 = tk.Label(frameDatosPedido, text = "Número de cliente",
+                       bg = "lightgreen", font=("Arial", 16))
+    mensaje2.pack()
+
+    numeroCliente = tk.Entry(frameDatosPedido, width = 30)
+    numeroCliente.pack(pady = 40)
+
+    mensaje3 = tk.Label(frameDatosPedido, text = "Fecha del pedido",
+                       bg = "lightgreen", font=("Arial", 16))
+    mensaje3.pack()
+
+    fechaPedido = tk.Entry(frameDatosPedido, width = 30)
+    fechaPedido.pack(pady = 60)
+
+
+    btnConfirmar = tk.Button(
+        frameDatosPedido, 
+        text = "Confirmar",
+        width = 7,
+        height = 3,
+        relief = "groove", 
+        borderwidth = 2,
+        bg = "#CCFF99",
+        font=("Arial", 12),
+        command = lambda : (pedidos.aniadir_pedido(codigoPedido.get(), int(numeroCliente.get()), fechaPedido.get()), cargarSegundoMenu(segundoMenu))
+    )
+
+    # Ubicación de botón en el centro de la pantalla
+    btnConfirmar.pack(pady = 10)
 
 
 
