@@ -19,7 +19,6 @@ menuPrincipal = tk.Frame(app, bg = "lightcoral")
 segundoMenu = tk.Frame(app, bg = "lightgreen")
 pantallaOpc1 = tk.Frame(app, bg = "lightgreen")
 pantallaOpc3 = tk.Frame(app, bg = "blue")
-frameTabla = tk.Frame(app)
 frameTablaStock = tk.Frame(app)
 frameTablaPedido = tk.Frame(app)
 frameTablaDetPed = tk.Frame(app)
@@ -36,7 +35,6 @@ def mostrarPantalla(frame):
     menuPrincipal.pack_forget()
     pantallaOpc1.pack_forget()
     pantallaOpc3.pack_forget()
-    frameTabla.pack_forget()
     frameTablaStock.pack_forget()
     frameTablaPedido.pack_forget()
     frameTablaDetPed.pack_forget()
@@ -44,6 +42,11 @@ def mostrarPantalla(frame):
     # pack() -> Método de la clase Frame que muestra un widget en la pantalla
     frame.pack(fill = 'both', expand = True) 
 
+
+def limpiarFrame(frame):
+    # Elimina todos los widgets hijos de un Frame
+    for widget in frame.winfo_children():
+        widget.destroy()
 
 def creacionBorradoTablas(archivo):
     pedidos.crear_tablas(archivo.get()) 
@@ -57,7 +60,7 @@ def accionPrincipal1():
     frameAux = tk.Frame(pantallaOpc1, bg = "lightgreen")
     frameAux.pack(expand = True)
 
-    mensaje = tk.Label(frameAux, text = "Indique el nombre archivo .sql desde \nla ruta actual (ponga /nombre_archivo.sql)",
+    mensaje = tk.Label(frameAux, text = "Indique el nombre archivo .sql desde \nla ruta actual (ponga 'nombre_archivo.sql')",
                        bg = "lightgreen", font=("Arial", 16))
     mensaje.pack()
 
@@ -89,6 +92,9 @@ def cargarTablaStock():
     columns = [description[0] for description in pedidos.cursor.description]
 
     tablaStock = pedidos.obtener_stock()
+
+    # Limpiar los frames hijos creados anteriormente
+    limpiarFrame(frameTablaStock)
     
     # Crear un sub-frame específico para la tabla
     frameTablaAux = tk.Frame(frameTablaStock)
@@ -107,6 +113,19 @@ def cargarTablaStock():
     frameTablaAux.grid_rowconfigure(0, weight = 1)
     frameTablaAux.grid_columnconfigure(0, weight = 1)
 
+    btnVolver = tk.Button(
+        frameTablaStock, 
+        text = "Volver",
+        width = 7,
+        height = 3,
+        relief = "groove", 
+        borderwidth = 2,
+        bg = "#CCFF99",
+        font=("Arial", 12),
+        command = lambda : mostrarPantalla(pantallaOpc3)    
+    )
+
+    btnVolver.pack(pady = 10)
 
 def cargarTablaPedio():
     mostrarPantalla(frameTablaPedido)
@@ -115,6 +134,9 @@ def cargarTablaPedio():
     columns = [description[0] for description in pedidos.cursor.description]
 
     tablaPedido = pedidos.obtener_pedido()
+
+    # Limpiar los frames hijos creados anteriormente
+    limpiarFrame(frameTablaPedido)
 
     # Crear un sub-frame específico para la tabla
     frameTablaAux = tk.Frame(frameTablaPedido)
@@ -133,6 +155,20 @@ def cargarTablaPedio():
     frameTablaAux.grid_rowconfigure(0, weight = 1)
     frameTablaAux.grid_columnconfigure(0, weight = 1)
 
+    btnConfirmar = tk.Button(
+        frameTablaPedido, 
+        text = "Volver",
+        width = 7,
+        height = 3,
+        relief = "groove", 
+        borderwidth = 2,
+        bg = "#CCFF99",
+        font=("Arial", 12),
+        command = lambda : mostrarPantalla(pantallaOpc3)      
+    )
+
+    btnConfirmar.pack(pady = 20)
+
 
 def cargarTablaDetallePed():
     mostrarPantalla(frameTablaDetPed)
@@ -141,6 +177,9 @@ def cargarTablaDetallePed():
     columns = [description[0] for description in pedidos.cursor.description]
 
     tablaDetallePed = pedidos.obtener_detalle_pedido()
+
+    # Limpiar los frames hijos creados anteriormente
+    limpiarFrame(frameTablaDetPed)
 
     # Crear un sub-frame específico para la tabla
     frameTablaAux = tk.Frame(frameTablaDetPed)
@@ -159,17 +198,8 @@ def cargarTablaDetallePed():
     frameTablaAux.grid_rowconfigure(0, weight = 1)
     frameTablaAux.grid_columnconfigure(0, weight = 1)
 
-
-def cargarTabla(opcion):
-    if opcion.get() == 1:
-        cargarTablaPedio()
-    elif opcion.get() == 2:
-        cargarTablaStock()
-    else :
-        cargarTablaDetallePed()
-    
     btnConfirmar = tk.Button(
-        frameTabla, 
+        frameTablaDetPed, 
         text = "Volver",
         width = 7,
         height = 3,
@@ -181,17 +211,28 @@ def cargarTabla(opcion):
     )
 
     btnConfirmar.pack(pady = 20)
+
+def cargarTabla(opcion):
+    if opcion.get() == 1:
+        cargarTablaPedio()
+    elif opcion.get() == 2:
+        cargarTablaStock()
+    else :
+        cargarTablaDetallePed()
     
 
 def accionPrincipal3():
     mostrarPantalla(pantallaOpc3)
 
+    # Limpiar los frames hijos creados anteriormente
+    limpiarFrame(pantallaOpc3)
+
     # Crear un sub-Frame para centrar los Radiobuttons usando grid
     frameOpcion = tk.Frame(pantallaOpc3, bg = "blue")
     frameOpcion.pack(expand = True)  # Pack dentro del frame_principal
 
-    opcion1 = tk.Radiobutton(frameOpcion, text = "Tabla Pedido", 
-                             variable = opcion, value = 1, bg = "blue", highlightthickness = 0, font=("Arial", 16))
+    opcion1 = tk.Radiobutton(frameOpcion, text = "Tabla Pedido", variable = opcion, value = 1, 
+                             bg = "blue", highlightthickness = 0, font=("Arial", 16))
     opcion2 = tk.Radiobutton(frameOpcion, text = "Tabla Stock", variable = opcion, value = 2,
                              bg = "blue", highlightthickness = 0, font=("Arial", 16))
     opcion3 = tk.Radiobutton(frameOpcion, text = "Tabla Detalle - Pedido", variable = opcion, 
@@ -215,6 +256,20 @@ def accionPrincipal3():
 
     btnConfirmar.pack(pady = 20)
 
+    btnVolver = tk.Button(
+        frameOpcion, 
+        text = "Volver",
+        width = 7,
+        height = 3,
+        relief = "groove", 
+        borderwidth = 2,
+        bg = "#CCFF99",
+        font=("Arial", 12),
+        command = lambda : mostrarPantalla(menuPrincipal)    
+    )
+
+    btnVolver.pack(pady = 10)
+
 def realizarAccion():
     seleccion = opcion.get()
 
@@ -224,12 +279,10 @@ def realizarAccion():
         pedidos.aniadir_pedido()
         cargarSegundoMenu(segundoMenu)
     elif seleccion == 3:
-        #cargarTablaStock()
-        #cargarTablaPedio()
         accionPrincipal3()
     elif seleccion == 4:
-        print("Cerrando conexión...")
         pedidos.cerrar_conex()
+        app.destroy()
 
 
 def realizarSegundaAccion():

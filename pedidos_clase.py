@@ -38,7 +38,7 @@ class Pedidos:
         # getcwd() -> Devuelve un string que representa el directorio de trabajo actual
         # print("Indique el nombre archivo .sql desde la ruta actual (ponga /nombre_archivo.sql):")
         # path = os.getcwd() + input()
-        path = os.getcwd() + archivo
+        path = os.getcwd() + "/" + archivo
 
         try:  
             # Abrir el archivo proporcionado en formato sql, el cual contiene las tablas a crear
@@ -244,5 +244,6 @@ class Pedidos:
     
     
     def cerrar_conex(self) -> None:
+        print("Cerrando conexión...")
         self.cursor.close()
         self.connection.close()
