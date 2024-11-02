@@ -4,6 +4,8 @@ import os
 # Adaptador para PostgreSQL en Python
 import psycopg2 as pg  
 
+from psycopg2 import errors
+
 database = str()
 user = str()
 password = str()
@@ -20,12 +22,18 @@ def usuario(nombre:str):
         database = 'pedidos'
         user = 'ddsiuser'
         password = 'ddsi'
+
+    elif nombre == "Dani":
+        database = "pedidos"
+        user = "dani"
+        password = "seminario1"
         
 
 class Pedidos:
     def __init__(self):
         #usuario("GERMÁN")
         usuario("JORGE")
+        usuario("Dani")
 
         global database, user, password
 
@@ -70,7 +78,6 @@ class Pedidos:
                 self.cursor.execute(archivo.read())
         except Exception as e:
             print("Error en la lectura del archivo")
-            self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
             raise e
 
         print("Tablas creadas")
@@ -94,10 +101,6 @@ class Pedidos:
         """
         self.cursor.execute("SAVEPOINT s1;")
 
-        # self.cpedido = input("Código del pedido: ")
-        # self.ccliente = int(input("Código del cliente: "))
-        # self.fecha_pedido = input("Fecha del pedido: ")  # De tipo DATE o VARCHAR
-
         try:
             # Introducir los datos en la tabla pedido.
             self.cursor.execute(
@@ -107,10 +110,16 @@ class Pedidos:
 
             print(f"Pedido añadido correctamente: cpedido={cpedido}, ccliente={ccliente}, fecha_pedido={fecha_pedido}")
 
-        except Exception as e:
+        except errors.UniqueViolation:
+            self.__manejar_excepcion_clave_primaria_pedidos()
+        except errors.StringDataRightTruncation:
+            self.__manejar_excepcion_lim_caracteres_pedidos()
+        except errors.DatetimeFieldOverflow:
+            self.__manejar_excepcion_formato_fecha_incorrecto()
+        except Exception: # Excepción genérica
             print("No se ha podido insertar el pedido")
             self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
-            raise e
+            raise
         
 
     def obtener_cantidad_producto(self):
@@ -273,3 +282,22 @@ class Pedidos:
         print("Cerrando conexión...")
         self.cursor.close()
         self.connection.close()
+
+    
+    def __manejar_excepcion_clave_primaria_pedidos(self):
+        print("""La clave primaria código_pedido ya se encuentra en la base de datos.
+                   Recuerda, no se puede duplicar""")
+        self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+        raise
+
+
+    def __manejar_excepcion_lim_caracteres_pedidos(self):
+        print(f"El valor de código pedido proporcionado no puede exceder los 5 caracteres")
+        self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+        raise
+
+
+    def __manejar_excepcion_formato_fecha_incorrecto(self):
+        print("El formato de la fecha debe de ser DD-MM-YYYY")
+        self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+        raise
