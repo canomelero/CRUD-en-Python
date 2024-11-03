@@ -11,6 +11,7 @@ user = str()
 password = str()
 
 def usuario(nombre:str):
+    """Inicializar la base de datos en función del usuario que la use"""
     global database, user, password
 
     if nombre == "GERMÁN":
@@ -30,9 +31,37 @@ def usuario(nombre:str):
         
 
 class Pedidos:
+    """Clase que tiene toda la funcioalidad que es requerida para el seminario 1.
+
+    Esta clase contiene toda la funcionalidad que se requiere en el seminario 1.
+    Es decir, maneja todas las tablas adecuadamente junto a los errores que pueden
+    ocurrir a lo largo de la consulta e insercción de datos en cada tabla.
+
+    Attributes
+    ----------
+    cursor : psycopg2.Cursor
+        Cursor a la base de datos utilizada.
+
+    cpedido : str
+        Código del pedido referenciado de la tabla pedido.
+
+    ccliente : str
+        Código del cliente referenciado de la tabla pedido.
+
+    fecha_pedido : str
+        Fecha en la que se realiza el pedido (tabla pedido).
+
+    cproducto : str
+        Código del producto de la tabla stock.
+
+    cantidad_pedida : str
+        Cantidad que se solicita del códio de producto porporcionado.
+    """
+
+
     def __init__(self):
         #usuario("GERMÁN")
-        usuario("JORGE")
+        #usuario("JORGE")
         usuario("Dani")
 
         global database, user, password
@@ -49,26 +78,30 @@ class Pedidos:
         self.ccliente = str()
         self.fecha_pedido = str()
         self.cproducto = str()
-        self.cantidad_stock = str()
+        self.cantidad_pedida = str()
     
+
     def crear_tablas(self, archivo : str) -> None:
         """Crea las tablas en una base de datos a partir de un archivo.
 
         Parameters
         ----------
-        cursor : psycopg2.cursor
-            Cursor a la base de datos de la conexión realizada.
+        archivo : str
+            Ruta del archivo respecto donde se ejecuta el programa.
 
         Returns
         -------
         None
+
+        Raises
+        ------
+        Exception
+            Cuando ha ocurrido un error a la hora de leer el archivo, ya sea porque no existe,
+            es incorrecta la ruta proporcionada, etc.
         """
 
         print("Creación de tablas e inserción de tuplas en Stock...")
 
-        # getcwd() -> Devuelve un string que representa el directorio de trabajo actual
-        # print("Indique el nombre archivo .sql desde la ruta actual (ponga /nombre_archivo.sql):")
-        # path = os.getcwd() + input()
         path = os.getcwd() + "/" + archivo
 
         try:  
@@ -90,14 +123,37 @@ class Pedidos:
         ----------
         cpedido : str
             Código del pedido a insertar. Es la calve primaria de la tabla pedido.
+
         ccliente : str
             Código del cliente que realiza el pedido.
+
         fecha_pedido : str
             Fecha en la que se ha realizado el pedido.
 
         Returns
         -------
         None
+
+        Raises
+        ------
+        errors.UniqueViolation
+            Se ha proporcionado una clave primaria a una nueva tupla, cuando la clave 
+            primaria ya existía anteriormente.
+
+        errors.StringDataRightTruncation
+            Se ha superado el límite de caracteres del código de pedido que permite la tabla
+            pedidos.
+
+        errors.DateTimeFieldOverflow
+            No se ha porporcionado la fecha en el formato europeo (DD-MM-YYYY).
+
+        error.InvlaidTextRepresentation
+            Se ha porporcionado un tipo de dato no numérico a la columna código de cliente
+            de pedidos.
+
+        Exception
+            Cualquier otro error que no tiene que ver con la insercción de valores en la
+            tabla pedidos.
         """
         self.cursor.execute("SAVEPOINT s1;")
 
@@ -109,20 +165,25 @@ class Pedidos:
             )
 
             print(f"Pedido añadido correctamente: cpedido={cpedido}, ccliente={ccliente}, fecha_pedido={fecha_pedido}")
-
         except errors.UniqueViolation:
             self.__manejar_excepcion_clave_primaria_pedidos()
         except errors.StringDataRightTruncation:
             self.__manejar_excepcion_lim_caracteres_pedidos()
         except errors.DatetimeFieldOverflow:
-            self.__manejar_excepcion_formato_fecha_incorrecto()
+            self.__manejar_excepcion_formato_fecha_incorrecto_pedidos()
+        except errors.InvalidTextRepresentation:
+            self.__manejar_excepcion_tipo_dato_incorrecto_pedidos()
         except Exception: # Excepción genérica
             print("No se ha podido insertar el pedido")
             self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
             raise
+        finally:
+            self.cpedido = cpedido
+            self.ccliente = ccliente
+            self.fecha_pedido = fecha_pedido
         
 
-    def obtener_cantidad_producto(self):
+    def obtener_cantidad_producto(self, cproducto : str, cantidad_pedida : str):
         """Obtiene la cantidad de producto que desea el cliente.
 
         Esta función obtiene la cantidad del producto porporcionado por su código de producto,
@@ -132,10 +193,11 @@ class Pedidos:
         Parameters
         ----------
         cproducto : str
-            Código del producto a obtener.
-        cantidad_stock : int
-            Existencias restantes del producto solicitado (sin reducir por la cantida 
-            solicitada de dicho producto).
+            Código del producto a obtener de la tabla stock.
+
+        cantidad_pedida : str
+            Cantidad de las existencias solicitadas respecto al código de producto (cproducto)
+            proporcionado.
 
         Returns
         -------
@@ -143,45 +205,44 @@ class Pedidos:
 
         Raises
         ------
+        errors.UndefinedColum
+            Se ha proporcionado un código de producto que no existe en la tabla stock.
+
         Exception
-            En caso de que haya 0 existencias del producto solicitado.
-        Exception
-            Si se solicita más productos de los que hay en la tabla stock.
+            - En caso de que haya 0 existencias del producto solicitado.
+            - Si se solicita más productos de los que hay en la tabla stock.
         """
         self.cursor.execute("SAVEPOINT s2;")
 
         print("Detalles del producto...")
-        self.cproducto = input("Código del producto: ")
-        self.cantidad_pedida = int(input("Cantidad de artículos: "))
 
         try:
             self.cursor.execute("SELECT cantidad FROM stock WHERE cproducto = %s;", 
-                                (self.cproducto,))
-            self.cantidad_stock = self.cursor.fetchone()[0]
+                                (cproducto,))
+            cantidad_stock = self.cursor.fetchone()
 
-            if not self.cantidad_stock:
+            if not cantidad_stock:
+                raise errors.UndefinedColumn
+            if not cantidad_stock[0]:
                 raise Exception("No hay artículos disponibles")
-            elif int(self.cantidad_stock) < self.cantidad_pedida:
+            elif int(cantidad_stock[0]) < int(cantidad_pedida):
                 raise Exception("No hay suficiente cantidad de artículos")
             
+            self.cproducto = cproducto
+            self.cantidad_pedida = cantidad_pedida
+
             self.aniadir_detalles_pedido()
+        except errors.UndefinedColumn:
+            self.__manejar_excepcion_cproducto_no_existe_producto()
         except Exception as e:
+            print(e)
             self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
-            raise e  
+            raise
 
 
     def aniadir_detalles_pedido(self):
         """Añade los valores obtenidos por la función obtener_cantidad_producto() y actualiza
         las existencias restantes de dicho producto.
-
-        Parameters
-        ----------
-        cpedido : str
-            Código del pedido realizado.
-        cproducto : str
-            Código del producto que se ha solicitado.
-        cantidad_pedida : int
-            Cantidad solicitada del código de producto en específico.
 
         Returns
         -------
@@ -199,35 +260,32 @@ class Pedidos:
                 "UPDATE stock SET cantidad = cantidad - %s WHERE cproducto = %s;",
                 (self.cantidad_pedida, self.cproducto)
             )
-        except Exception as e:
+        except Exception:
             print("No ha sido posible añadir los detalles del producto")
             self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
-            raise e
+            raise
 
 
     def eliminar_detalles_pedido(self) -> None:
         """Elimina una tupla de la tabla detalle_pedido.
-
-        Parameters
-        ----------
-        cpedido : str
-            Código del pedido de la tupla a eliminar.
         
         Returns
         -------
         None
+
+        Raises
+        ------
+        errors.TransactionRollbackError
+            No se ha ejecutado correctamente el rollback.
         """
 
         print("Eliminando detalles del pedido...")
 
-        self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
-
-        #try:
-        #    self.cursor.execute("DELETE FROM detalle_pedido WHERE cpedido = %s;", (cpedido,))
-        #except Exception as e:
-        #    print("No ha sido posible eliminar los detalles del pedido")
-        #    self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
-        #    raise e
+        try:
+            self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
+        except errors.TransactionRollbackError:
+            print("Ha ocurrido un error a la hora de eliminar los detalles del pedido")
+            raise
 
 
     def eliminar_detalles_y_pedido(self) -> None:
@@ -248,16 +306,12 @@ class Pedidos:
         """
 
         print("Eliminando pedido...")
-
-        self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
         
-        #try:
-        #    eliminar_detalles_pedido(cpedido)
-        #    self.cursor.execute("DELETE FROM pedido WHERE cpedido = %s;", (cpedido,))
-        #except Exception as e:
-        #    print("No ha sido posible eliminar el pedido")
-        #    self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
-        #    raise e
+        try:
+            self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+        except errors.TransactionRollbackError():
+            print("Ha ocurrido un error a la hora de eliminar los detalles del pedido y el pedido")
+            raise
         
 
     def obtener_pedido(self) -> list:
@@ -279,10 +333,10 @@ class Pedidos:
     
     
     def cerrar_conex(self) -> None:
+        """Cierra la conexión activa de la base de datos"""
         print("Cerrando conexión...")
         self.cursor.close()
         self.connection.close()
-
     
     def __manejar_excepcion_clave_primaria_pedidos(self):
         print("""La clave primaria código_pedido ya se encuentra en la base de datos.
@@ -297,7 +351,17 @@ class Pedidos:
         raise
 
 
-    def __manejar_excepcion_formato_fecha_incorrecto(self):
+    def __manejar_excepcion_formato_fecha_incorrecto_pedidos(self):
         print("El formato de la fecha debe de ser DD-MM-YYYY")
         self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+        raise
+
+    def __manejar_excepcion_tipo_dato_incorrecto_pedidos(self):
+        print("En el campo código de cliente se esperaba un valor entero")
+        self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+        raise
+
+    def __manejar_excepcion_cproducto_no_existe_producto(self):
+        print("El código de producto proporcionado no existe en la tabla stock")
+        self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
         raise
