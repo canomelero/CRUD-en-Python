@@ -1,4 +1,6 @@
-
 .DS_Store
 /pgdata
 .pyc
+logfile
+__pycache__
+.pytest_cache
