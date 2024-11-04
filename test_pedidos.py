@@ -42,20 +42,20 @@ def test_crear_tablas_archivo_incorrecto(conexion_bd):
 
 @pytest.mark.skip(reason="Test desactivado temporalmente para evitar respuestas incorrectas")
 def test_aniadir_pedido_correcto(conexion_bd):
-    conexion_bd.aniadir_pedido("1234", 345, "16-07-2023")
+    conexion_bd.aniadir_pedido(1234, 345, "16-07-2023")
     valores_anidadidos = conexion_bd.obtener_pedido()
     conexion_bd.connection.commit()
 
-    assert valores_anidadidos == [("1234", 345, "16-07-2023")]
+    assert valores_anidadidos == [(1234, 345, "16-07-2023")]
 
 
 # Generar lista de valores incorrectos con las repsectivas excepciones que lanza
 # cada tupla.
 @pytest.mark.parametrize("valores_inco_pedidos, excep_esp", [
-    (("1234", 346, "16-07-2023"), errors.UniqueViolation),
-    (("123456789", 345, "18-07-2023"), errors.StringDataRightTruncation),
-    (("12", 345, "2023-18-07"), errors.DatetimeFieldOverflow),
-    (("13", "abcdef", "2023-18-07"), errors.InvalidTextRepresentation)
+    ((1234, 346, "16-07-2023"), errors.UniqueViolation),
+    ((11, 345, "18-07-2023"), errors.StringDataRightTruncation),
+    ((12, 345, "16-06-2022"), errors.DatetimeFieldOverflow),
+    ((13, 346, "2023-18-07"), errors.InvalidTextRepresentation)
 ])
 
 # Este test va recorriendo en un bucle toda la lista creada anteriormente y comprueba
@@ -68,14 +68,14 @@ def test_aniadir_cod_pedido_incorrecto(conexion_bd, valores_inco_pedidos, excep_
 
 
 def test_obtener_cantidad_producto(conexion_bd):
-    conexion_bd.obtener_cantidad_producto("1a", "4")
+    conexion_bd.obtener_cantidad_producto(1, 4)
     conexion_bd.connection.commit()
 
-    assert (conexion_bd.cproducto, conexion_bd.cantidad_pedida) == ("1a", "4")
+    assert (conexion_bd.cproducto, conexion_bd.cantidad_pedida) == (1, 4)
 
 def test_obtener_cantidad_producto_cp_no_existe(conexion_bd):
     with pytest.raises(errors.UndefinedColumn):
-        conexion_bd.obtener_cantidad_producto("12a", "4")
+        conexion_bd.obtener_cantidad_producto(12, 4)
         conexion_bd.connection.commit()
 
 

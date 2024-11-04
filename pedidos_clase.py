@@ -42,7 +42,7 @@ def usuario(nombre:str):
         password = 'ddsi'
 
     elif nombre == "Dani":
-        database = "pedidos"
+        database = "seminario1"
         user = "dani"
         password = "seminario1"
         
@@ -78,8 +78,8 @@ class Pedidos:
 
     def __init__(self):
         #usuario("GERMÁN")
-        usuario("JORGE")
-        #usuario("Dani")
+        #usuario("JORGE")
+        usuario("Dani")
 
         global database, user, password
 
@@ -184,8 +184,8 @@ class Pedidos:
             print(f"Pedido añadido correctamente: cpedido={cpedido}, ccliente={ccliente}, fecha_pedido={fecha_pedido}")
         except errors.UniqueViolation:
             self.__manejar_excepcion_clave_primaria_pedidos()
-        except errors.StringDataRightTruncation:
-            self.__manejar_excepcion_lim_caracteres_pedidos()
+        except errors.InvalidDatetimeFormat:
+            self.__manejar_excepcion_formato_fecha_pedidos()
         except errors.DatetimeFieldOverflow:
             self.__manejar_excepcion_formato_fecha_incorrecto_pedidos()
         except errors.InvalidTextRepresentation:
@@ -229,7 +229,8 @@ class Pedidos:
             - En caso de que haya 0 existencias del producto solicitado.
             - Si se solicita más productos de los que hay en la tabla stock.
         """
-        
+        pedidos.cursor.execute("SAVEPOINT s2;")
+
         print("Obteniendo la cantidad del producto...")
 
         try:
@@ -247,7 +248,7 @@ class Pedidos:
             self.cproducto = cproducto
             self.cantidad_pedida = cantidad_pedida
 
-            #self.aniadir_detalles_pedido()
+            self.aniadir_detalles_pedido()
         except errors.UndefinedColumn:
             self.__manejar_excepcion_cproducto_no_existe_producto()
         except Exception as e:
@@ -340,6 +341,7 @@ class Pedidos:
         print("Contenido de la tabla Pedido:")
         print(tabulate(valores_pedidos, headers=columnas, tablefmt="grid"))
 
+
     def imprimir_stock(self) -> None:
         """Obtiene el contenido de la tabla Stock y lo muestra."""
         self.cursor.execute("SELECT * FROM stock;")
@@ -351,6 +353,7 @@ class Pedidos:
         # Imprimir la tabla en formato ASCII
         print("Contenido de la tabla Stock:")
         print(tabulate(valores_stock, headers=columnas, tablefmt="grid"))
+
 
     def imprimir_detalle_pedido(self) -> None:
         """Obtiene el contenido de la tabla Detalle Pedido y lo muestra."""
@@ -378,20 +381,23 @@ class Pedidos:
         raise
 
 
-    def __manejar_excepcion_lim_caracteres_pedidos(self):
-        print(f"El valor de código pedido proporcionado no puede exceder los 5 caracteres")
+    def __manejar_excepcion_formato_fecha_pedidos(self):
+        print(f"La fecha proporcionada debería de ser DD-MM-YYYY")
         self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
         raise
+
 
     def __manejar_excepcion_formato_fecha_incorrecto_pedidos(self):
         print("El formato de la fecha debe de ser DD-MM-YYYY")
         self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
         raise
 
+
     def __manejar_excepcion_tipo_dato_incorrecto_pedidos(self):
         print("En el campo código de cliente se esperaba un valor entero")
         self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
         raise
+
 
     def __manejar_excepcion_cproducto_no_existe_producto(self):
         print("El código de producto proporcionado no existe en la tabla stock")
@@ -408,8 +414,6 @@ if __name__ == "__main__":
     fecha_pedido = str()
     cod_producto = str()
     cantidad_stock = str()
-    savepoint_1 = "SAVEPOINT s1;"
-    savepoint_2 = "SAVEPOINT s2;"
 
     opcion1 = int(input(menu))
     opcion2 = str()
@@ -419,12 +423,10 @@ if __name__ == "__main__":
         try:
             while opcion1 != 4:
                 if opcion1 == 1:
-                    pedidos.cursor.execute(savepoint_1)
                     archivo_sql = input("Introduzca el nombre del archivo sql: ")
                     pedidos.crear_tablas(archivo_sql)
                         
                 elif opcion1 == 2:
-                    pedidos.cursor.execute(savepoint_1) 
 
                     # Asignar cada valor de la tupla devuelva a cada variable
                     print("..: Datos del pedido :...")
@@ -437,7 +439,7 @@ if __name__ == "__main__":
                     opcion2 = int(input(menu2))
 
                     while opcion2 == 1 or opcion2 == 2:
-                        pedidos.cursor.execute(savepoint_2)
+                        
                         
                         if opcion2 == 1:
                             print("..: Datos del producto :..")
