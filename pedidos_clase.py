@@ -3,12 +3,29 @@ import os
 
 # Adaptador para PostgreSQL en Python
 import psycopg2 as pg  
-
 from psycopg2 import errors
+from tabulate import tabulate
 
 database = str()
 user = str()
 password = str()
+
+# Variables globales para mostrar el menú por pantalla
+menu = """
+    \n.: Menú :.
+        1. Borrado y creación de tablas con inserción de 10 tuplas 
+        2. Dar de alta nuevo pedido
+        3. Mostrar contenido de las tablas de la BD
+        4. Salir del programa y cerrar conexión a la BD
+        ¿Qué acción desea realizar?: 
+    """
+menu2 = """
+    Opciones:
+        1. Añadir detalle de producto
+        2. Eliminar todos los detalles del producto
+        3. Cancelar el pedido
+        4. Finalizar pedido 
+    """
 
 def usuario(nombre:str):
     """Inicializar la base de datos en función del usuario que la use"""
@@ -61,8 +78,8 @@ class Pedidos:
 
     def __init__(self):
         #usuario("GERMÁN")
-        #usuario("JORGE")
-        usuario("Dani")
+        usuario("JORGE")
+        #usuario("Dani")
 
         global database, user, password
 
@@ -212,9 +229,8 @@ class Pedidos:
             - En caso de que haya 0 existencias del producto solicitado.
             - Si se solicita más productos de los que hay en la tabla stock.
         """
-        self.cursor.execute("SAVEPOINT s2;")
-
-        print("Detalles del producto...")
+        
+        print("Obteniendo la cantidad del producto...")
 
         try:
             self.cursor.execute("SELECT cantidad FROM stock WHERE cproducto = %s;", 
@@ -231,7 +247,7 @@ class Pedidos:
             self.cproducto = cproducto
             self.cantidad_pedida = cantidad_pedida
 
-            self.aniadir_detalles_pedido()
+            #self.aniadir_detalles_pedido()
         except errors.UndefinedColumn:
             self.__manejar_excepcion_cproducto_no_existe_producto()
         except Exception as e:
@@ -249,8 +265,6 @@ class Pedidos:
         None
         """
 
-        print("Añadiendo los detalles del pedido...")
-
         try:
             self.cursor.execute(
                 "INSERT INTO detalle_pedido(cpedido, cproducto, cantidad) VALUES (%s, %s, %s);",
@@ -262,7 +276,7 @@ class Pedidos:
             )
         except Exception:
             print("No ha sido posible añadir los detalles del producto")
-            self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
+            self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
             raise
 
 
@@ -314,22 +328,41 @@ class Pedidos:
             raise
         
 
-    def obtener_pedido(self) -> list:
-        """Obtiene el contenido de la tabla Pedido."""
+    def imprimir_pedido(self) -> None:
+        """Obtiene el contenido de la tabla Pedido y lo muestra."""
         self.cursor.execute("SELECT * FROM pedido;")
-        return self.cursor.fetchall()
+        valores_pedidos = self.cursor.fetchall()
+        
+        # Obtener los nombres de columna de la tabla
+        columnas = [desc[0] for desc in self.cursor.description]
+        
+        # Imprimir la tabla en formato ASCII
+        print("Contenido de la tabla Pedido:")
+        print(tabulate(valores_pedidos, headers=columnas, tablefmt="grid"))
 
-
-    def obtener_stock(self) -> list:
-        """Obtiene el contenido de la tabla Stock."""
+    def imprimir_stock(self) -> None:
+        """Obtiene el contenido de la tabla Stock y lo muestra."""
         self.cursor.execute("SELECT * FROM stock;")
-        return self.cursor.fetchall()
+        valores_stock = self.cursor.fetchall()
+        
+        # Obtener los nombres de columna de la tabla
+        columnas = [desc[0] for desc in self.cursor.description]
+        
+        # Imprimir la tabla en formato ASCII
+        print("Contenido de la tabla Stock:")
+        print(tabulate(valores_stock, headers=columnas, tablefmt="grid"))
 
-
-    def obtener_detalle_pedido(self) -> list:
-        """Obtiene el contenido de la tabla Detalle Pedido."""
+    def imprimir_detalle_pedido(self) -> None:
+        """Obtiene el contenido de la tabla Detalle Pedido y lo muestra."""
         self.cursor.execute("SELECT * FROM detalle_pedido;")
-        return self.cursor.fetchall()
+        valores_detalle_pedidos = self.cursor.fetchall()
+        
+        # Obtener los nombres de columna de la tabla
+        columnas = [desc[0] for desc in self.cursor.description]
+        
+        # Imprimir la tabla en formato ASCII
+        print("Contenido de la tabla Detalle Pedido:")
+        print(tabulate(valores_detalle_pedidos, headers=columnas, tablefmt="grid"))
     
     
     def cerrar_conex(self) -> None:
@@ -350,7 +383,6 @@ class Pedidos:
         self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
         raise
 
-
     def __manejar_excepcion_formato_fecha_incorrecto_pedidos(self):
         print("El formato de la fecha debe de ser DD-MM-YYYY")
         self.cursor.execute("ROLLBACK TO SAVEPOINT s1;")
@@ -365,3 +397,94 @@ class Pedidos:
         print("El código de producto proporcionado no existe en la tabla stock")
         self.cursor.execute("ROLLBACK TO SAVEPOINT s2;")
         raise
+
+
+if __name__ == "__main__":
+    # Variables para recoger los datos del pedido y stock
+    continuar_ejecucion = True
+
+    cod_pedido = str()
+    cod_cliente = str()
+    fecha_pedido = str()
+    cod_producto = str()
+    cantidad_stock = str()
+    savepoint_1 = "SAVEPOINT s1;"
+    savepoint_2 = "SAVEPOINT s2;"
+
+    opcion1 = int(input(menu))
+    opcion2 = str()
+    pedidos = Pedidos()
+    
+    while continuar_ejecucion:
+        try:
+            while opcion1 != 4:
+                if opcion1 == 1:
+                    pedidos.cursor.execute(savepoint_1)
+                    archivo_sql = input("Introduzca el nombre del archivo sql: ")
+                    pedidos.crear_tablas(archivo_sql)
+                        
+                elif opcion1 == 2:
+                    pedidos.cursor.execute(savepoint_1) 
+
+                    # Asignar cada valor de la tupla devuelva a cada variable
+                    print("..: Datos del pedido :...")
+                    cod_pedido = input("Código del pedido: ")
+                    cod_cliente = input("Código del cliente: ")
+                    fecha_pedido = input("Fecha del pedido: ")
+                    pedidos.aniadir_pedido(cod_pedido, cod_cliente, fecha_pedido)
+                    
+                    # Opciones a realizar con el pedido
+                    opcion2 = int(input(menu2))
+
+                    while opcion2 == 1 or opcion2 == 2:
+                        pedidos.cursor.execute(savepoint_2)
+                        
+                        if opcion2 == 1:
+                            print("..: Datos del producto :..")
+                            cod_producto = input("Indique el código del producto: ")
+                            cantidad_seleccionada = input("Indique la cantidad de producto que desea: ")
+                            pedidos.obtener_cantidad_producto(cod_producto, cantidad_seleccionada)
+                            pedidos.aniadir_detalles_pedido() 
+                        
+                        elif opcion2 == 2:
+                            print("Eliminando detalles del pedido...")
+                            pedidos.eliminar_detalles_pedido()   
+                    
+                        opcion2 = int(input(menu2))
+
+                    if opcion2 == 3:
+                        print("Eliminando detalles del pedido y pedido...")
+                        pedidos.eliminar_detalles_y_pedido() 
+
+                    elif opcion2 == 4:
+                        print("Guardando los cambios realizados y saliendo...")
+                        pedidos.connection.commit();
+                        
+                    else:
+                        print("Ingrese un valor entre 1-4 (inclusive)")   
+                    
+                elif opcion1 == 3:
+                    pedidos.imprimir_stock()
+                    pedidos.imprimir_pedido()
+                    pedidos.imprimir_detalle_pedido()
+                
+                elif opcion1 == 4:
+                    continuar_ejecucion = False
+                    
+                else:
+                    print("Ingrese un valor entre 1-4 (inclusive)")
+
+                opcion1 = int(input(menu)); 
+        except Exception as e:
+            print("""
+                  \n=========================================================================
+                  \n=========================================================================
+                  \nVolviendo al inicio del programa debido a un error. En caso de querer
+                  \nsalir pulse 4 cuando sea posible.
+                  \n=========================================================================
+                  \n=========================================================================
+                """)
+
+    # cerrar conexión cuando finaliza el programa
+    pedidos.cerrar_conex()
+        
