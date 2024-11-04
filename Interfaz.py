@@ -288,7 +288,17 @@ def realizarAccion():
 
 def realizarSegundaAccion():
     seleccion = segundaOpcion.get()
-
+    
+    #---------------------------------------------------------------
+    #---------------------------------------------------------------
+    #
+    # Para el if seleccion == 1 hay que pasar por parámetro el código 
+    # del producto y la cantidad solicitada. No se donde lo hacéis 
+    # os lo informo para que lo tengáis en cuenta de que esta opción
+    # no funciona ahora mismo.
+    #
+    #---------------------------------------------------------------
+    #---------------------------------------------------------------
     if seleccion == 1:
         pedidos.obtener_cantidad_producto()
     elif seleccion == 2:

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS stock (
 CREATE TABLE IF NOT EXISTS pedido (
     cpedido VARCHAR(5) PRIMARY KEY,
     ccliente INT,
-    fecha_pedido VARCHAR(10) 
+    fecha_pedido DATE
 );
 
 CREATE TABLE IF NOT EXISTS detalle_pedido (
