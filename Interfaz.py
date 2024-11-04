@@ -22,7 +22,7 @@ pantallaOpc3 = tk.Frame(app, bg = "blue")
 frameTablaStock = tk.Frame(app)
 frameTablaPedido = tk.Frame(app)
 frameTablaDetPed = tk.Frame(app)
-frameDatosPedido = tk.Frame(app, bg="darkblue")
+frameDatosPedido = tk.Frame(app, bg="lightgreen")
 
 # Añadir la imagen de fondo de la pantalla principal
 label_fondo = tk.Label(pantallaInicial, image=imagen_fondo)
@@ -338,7 +338,6 @@ def cargarMenuPrincipal(frame):
 
 
 def cargarSegundoMenu(frame):
-
     mostrarPantalla(frame)
 
     # Crear un sub-Frame para centrar los Radiobuttons usando grid
@@ -402,30 +401,35 @@ def cargarPantallaInicio(app):
 def accionDatosPedido():
     mostrarPantalla(frameDatosPedido)
 
-    mensaje1 = tk.Label(frameDatosPedido, text = "Código de pedido",
+    limpiarFrame(frameDatosPedido)
+
+    # Creación del Frame que contendrá la información
+    frameAux = tk.Frame(frameDatosPedido, bg = "lightgreen")
+    frameAux.pack(expand = True)
+
+    mensaje1 = tk.Label(frameAux, text = "Código de pedido",
                        bg = "lightgreen", font=("Arial", 16))
     mensaje1.pack()
 
-    codigoPedido = tk.Entry(frameDatosPedido, width = 30)
+    codigoPedido = tk.Entry(frameAux, width = 30)
     codigoPedido.pack(pady = 20)
 
-    mensaje2 = tk.Label(frameDatosPedido, text = "Número de cliente",
+    mensaje2 = tk.Label(frameAux, text = "Número de cliente",
                        bg = "lightgreen", font=("Arial", 16))
     mensaje2.pack()
 
-    numeroCliente = tk.Entry(frameDatosPedido, width = 30)
-    numeroCliente.pack(pady = 40)
+    numeroCliente = tk.Entry(frameAux, width = 30)
+    numeroCliente.pack(pady = 20)
 
-    mensaje3 = tk.Label(frameDatosPedido, text = "Fecha del pedido",
+    mensaje3 = tk.Label(frameAux, text = "Fecha del pedido",
                        bg = "lightgreen", font=("Arial", 16))
     mensaje3.pack()
 
-    fechaPedido = tk.Entry(frameDatosPedido, width = 30)
-    fechaPedido.pack(pady = 60)
-
+    fechaPedido = tk.Entry(frameAux, width = 30)
+    fechaPedido.pack(pady = 20)
 
     btnConfirmar = tk.Button(
-        frameDatosPedido, 
+        frameAux, 
         text = "Confirmar",
         width = 7,
         height = 3,
